@@ -22,7 +22,7 @@ There is also a new script in the `package.json`. To run this project, you'll ne
 This will run both a typical React application as well as our Node server.
 
 > **Important:** To simulate a real "production" server, requests fail sometimes. If the server sends an error, it might not be a problem with your code, but rather a simulation of a network issue.
-
+  
 ### Server endpoints
 
 The server exposes the following endpoints:
@@ -427,6 +427,9 @@ const SomeComponent = () => {
 ```
 
 _HINT:_ You'll need to use `React.useContext(SeatContext)` to get the data.
+```js
+// actually I passed it as props...
+```
 
 ### Exercise 4: Polishing this UI
 

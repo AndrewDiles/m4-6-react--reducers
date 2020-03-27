@@ -298,6 +298,29 @@ const LightSwitch = () => {
     </>
   );
 };
+
+// becomes 
+
+const reducer = (state, action) => {
+  switch (action.type) {
+    case 'TOGGLE_LIGHT':
+      return !state;
+    default:
+      throw new Error(`What?: ${action.type}`)
+  }
+}
+
+const LightSwitch = () => {
+  const [state, dispatch] = React.usReducer(reducer, false);
+
+  return (
+    <>
+      Light is {state ? 'on' : 'off'}.
+      <button onClick={() => dispatch('TOGGLE_LIGHT')}>Toggle</button>
+    </>
+  );
+};
+
 ```
 
 ---
@@ -317,6 +340,46 @@ function App() {
           })
           .catch(() => {
             setStatus('error');
+          });
+      }}
+    >
+      Status is: {status}
+      <button>Submit</button>
+    </form>
+  );
+}
+
+// becomes 
+function reducer(state, action) {
+  switch (action.type) {
+    case 'REQUEST_DATA': {
+      return 'loading';
+    }
+    case 'RECEIVE_DATA': {
+      return 'idle';
+    }
+    case 'RECEIVE_ERROR': {
+      return 'error';
+    }
+    default:
+      throw new Error('error: unrecognized error.');
+  }
+}
+
+function App() {
+  const [state, dispatch] = useReducer(reducer, 'idle');
+
+  return (
+    <form
+      onSubmit={() => {
+        dispatch('REQUEST_DATA');
+
+        getStatusFromServer()
+          .then(() => {
+            dispatch('RECEIVE_DATA');
+          })
+          .catch(() => {
+            dispatch(type: 'RECEIVE_ERROR');
           });
       }}
     >
@@ -346,6 +409,42 @@ export const ModalProvider = ({ children }) => {
     </ModalContext.Provider>
   );
 };
+
+// becomes
+
+export const ModalContext = React.createContext(null);
+
+const reducer = (state, action) => {
+  switch (action.type) {
+    case 'OPEN_MODAL':
+      return action.modal
+    case 'CLOSE_MODAL':
+      return null
+    default:
+      throw new Error('Unrecornized action');
+  }
+}
+export const ModalProvider = ({ children }) => {
+  const [state, dispartch] = useReducer(reducer, null);
+  // const [currentModal, setCurrentModal] = React.useState(null);
+
+  const openModal = modal => dispatch({type: 'OPEN_MODAL'})
+  const closeModal = modal => dispatch({type: 'CLOSE_MODAL'})
+
+  return (
+    <ModalContext.Provider
+      value={{
+        currentModal: state
+        openModal,
+        closeModal
+      }}
+    >
+      {children}
+    </ModalContext.Provider>
+  );
+};
+
+<button onClick={()=> openModal('login')}>Sign In</Button>>
 ```
 
 ---
@@ -452,7 +551,8 @@ const initialState = {
 function reducer(state, action) {
   if (action.type === 'increment-beans') {
     return {
-      numOfButtons: state.numOfButtons,
+      // numOfButtons: state.numOfButtons, dont need this line if you use ...state,
+      ...state,
       numOfBeans: state.numOfBeans + 0.5,
     };
   }
@@ -522,6 +622,56 @@ const Game = () => {
     </>
   );
 };
+
+// becomes
+const initialState = {
+  points: 0,
+  status: 'idle'
+}
+const reducer = (state, action) => {
+  switch (action.type) {
+    case 'GAIN_POINT': {
+      return {
+        ...state,
+        points: state.point +1,
+      }
+    }
+    case 'LOSE_POINT': {
+      return {
+        ...state,
+        points: state.point -1,
+    }
+    case 'START_GAME': {
+      return {
+        ...state,
+        status: 'playing',
+      }
+      case 'RESET_GAME': {
+        return initialState;
+      }
+    }
+    default: 
+      throw new Error(`${selection.type}: no such action`);
+  }
+}
+
+const Game = () => {
+  const [state, dispatch] = useReducer(reducer, initialState);
+  const { points, status } = state;  //if you dont destructure then you need to have You score: {state.points}.  and state.status later on
+
+  return (
+    <>
+      Your score: {points}.
+      {status === 'playing' && (
+        <>
+          <button onClick={() => dispatch({type: 'GAIN_POINT'})>🍓</button>
+          <button onClick={() => dispatch({type: 'LOSE_POINT'})>💀</button>
+        </>
+      )}
+      <button onClick={() => dispatch({type: 'START_GAME'})>Start game</button>
+    </>
+  );
+};
 ```
 
 ---
@@ -568,6 +718,65 @@ const SignUpForm = () => {
     </form>
   );
 };
+
+// becomes 
+
+import sendDataToServer from './some-madeup-place';
+import FormField from './some-other-madeup-place';
+const initialState = {
+  firstName: '',
+  lastName: '',
+  email: '',
+};
+function reducer(state, action) {
+  switch (action.type) {
+    case 'update-field': {
+      return {
+        ...state,
+        [action.key]: action.value,
+        // doing [action.key] instead of firstName    lastName   email
+      };
+    }
+    case 'reset-form': {
+      return initialState;
+    }
+  }
+}
+const SignUpForm = () => {
+  const [state, dispatch] = React.useReducer(reducer, initialState);
+  const updateField = (key, value) =>
+    dispatch({ type: 'update-field', key, value });
+  const resetForm = () => dispatch({ type: 'reset-form', key, value });
+  return (
+    <form onSubmit={sendDataToServer}>
+      <FormField
+        label="First Name"
+        value={state.firstName}
+        onChange={ev => updateField('firstName', ev.target.value)}
+      />
+      <FormField
+        label="Last Name"
+        value={state.lastName}
+        onChange={ev => updateField('lastName', ev.target.value)}
+      />
+      <FormField
+        label="Email"
+        value={state.email}
+        onChange={ev => updateField('email', ev.target.value)}
+      />
+      <button>Submit</button>
+      <button
+        onClick={ev => {
+          ev.preventDefault();
+          resetForm();
+        }}
+      >
+        Reset
+      </button>
+    </form>
+  );
+};
+
 ```
 
 ---
